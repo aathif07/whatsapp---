@@ -1,0 +1,44 @@
+@import "tailwindcss";
+@import "@fontsource-variable/hanken-grotesk";
+@theme {
+  --font-sans: "Hanken Grotesk Variable", system-ui, sans-serif;
+  --color-ink: #10211b; --color-soft: #5a6b64; --color-line: #dfe6e2; --color-bg: #f4f7f5;
+  --color-brand: #0b6b4f; --color-tint: #e3f1eb;
+  --color-good: #0ca30c; --color-bad: #d03b3b; --color-warn: #fab219;
+}
+body { background: #efeae2; color: var(--color-ink); font-size: 14.5px; }
+button, a, select, label:has(input[type=checkbox]) { cursor: pointer; } button:disabled { cursor: not-allowed; opacity: .5; }
+:focus-visible { outline: 2px solid #00a884; outline-offset: 2px; }
+@utility card { @apply bg-white rounded-xl; box-shadow: 0 1px 2px rgba(11,20,26,.14); }
+@utility field { @apply w-full rounded-xl px-4 py-2.5 border border-transparent; background: #f0f2f5; transition: background .15s, border-color .15s; &:hover { background: #e9edef; } &:focus { background: #fff; border-color: #00a884; outline: none; box-shadow: 0 0 0 3px #00a88426; } }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 font-semibold whitespace-nowrap; background: #fff; color: #027a5b; border: 1px solid #cfdad5; transition: background .15s; &:hover { background: #e7f7f0; } }
+@utility btn-main { @apply btn; background: #008069; border-color: #008069; color: #fff; &:hover { background: #016b58; } }
+@utility icon-btn { @apply grid place-items-center rounded-full w-9 h-9 text-soft shrink-0; transition: background .15s; &:hover { background: #f0f2f5; color: #10211b; } }
+select.field { appearance: none; padding-right: 36px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2354656f' stroke-width='2'%3E%3Cpath d='m4 6 4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 600; font-size: 13px; color: var(--color-soft); padding: 13px 12px; white-space: nowrap; background: #f7f8f8; }
+td { padding: 10px 12px; border-top: 1px solid #eef1f0; white-space: nowrap; } tbody tr:hover td { background: #f7faf9; }
+th:first-child, td:first-child { position: sticky; left: 0; background: #fff; padding-left: 20px; } th:first-child { background: #f7f8f8; }
+.toggle { appearance: none; width: 42px; height: 24px; border-radius: 12px; background: #b5c0c5; position: relative; flex: none; cursor: pointer; transition: background .15s; }
+.toggle::after { content: ""; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px; border-radius: 50%; background: #fff; transition: transform .15s; } .toggle:checked { background: #008069; } .toggle:checked::after { transform: translateX(18px); }
+input[type=checkbox]:not(.toggle) { width: 18px; height: 18px; accent-color: #008069; flex: none; }
+/* shared wallpaper: hand-drawn doodles */
+.wall, .wa-wall { background-color: #efeae2; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260' fill='none' stroke='%23dcd3c4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 22h34v24H36l-9 8v-8h-7z'/%3E%3Ccircle cx='118' cy='36' r='16'/%3E%3Cpath d='M118 27v9l7 4'/%3E%3Cpath d='M192 20c-8 0-13 6-13 13 0 10 13 22 13 22s13-12 13-22c0-7-5-13-13-13z'/%3E%3Ccircle cx='192' cy='33' r='4'/%3E%3Cpath d='m30 112 7 8 15-17'/%3E%3Cpath d='m40 120 3 3 15-17'/%3E%3Crect x='96' y='92' width='24' height='40' rx='5'/%3E%3Cpath d='M105 126h6'/%3E%3Cpath d='M180 126c-14-9-18-16-14-23 4-6 11-4 14 2 3-6 10-8 14-2 4 7 0 14-14 23z'/%3E%3Ccircle cx='38' cy='198' r='17'/%3E%3Cpath d='M30 203c5 6 11 6 16 0M32 192v1M44 192v1'/%3E%3Cpath d='M96 190h40v26H96zM96 191l20 14 20-14'/%3E%3Cpath d='M184 182h30v32h-30zM184 192h30M192 177v9M206 177v9M192 203l4 4 8-9'/%3E%3Cpath d='M238 70v10M233 75h10M70 70v8M66 74h8M150 158v8M146 162h8M236 158l6 6M242 158l-6 6M76 240h8M160 240l5 6 8-10'/%3E%3C/svg%3E"); }
+/* WhatsApp-style chat */
+.wa-wall { font-size: 14.5px; line-height: 1.35; }
+.wa-msg { position: relative; width: fit-content; max-width: min(82%, 560px); border-radius: 8px; box-shadow: 0 1px .5px rgba(11,20,26,.14); animation: wa-pop .16s ease-out; }
+.wa-in { background: #fff; } .wa-out { background: #d9fdd3; margin-left: auto; }
+.wa-in.wa-tail { border-top-left-radius: 0; } .wa-out.wa-tail { border-top-right-radius: 0; }
+.wa-tail::before { content: ""; position: absolute; top: 0; width: 8px; height: 12px; }
+.wa-in.wa-tail::before { left: -8px; background: #fff; clip-path: polygon(0 0, 100% 0, 100% 100%); }
+.wa-out.wa-tail::before { right: -8px; background: #d9fdd3; clip-path: polygon(0 0, 100% 0, 0 100%); }
+.wa-meta { float: right; display: inline-flex; align-items: center; gap: 3px; margin: 7px 0 -2px 12px; font-size: 11px; color: #5b6a70; white-space: nowrap; }
+.wa-msg::after { content: ""; display: block; clear: both; }
+.wa-cta { clear: both; display: flex; gap: 8px; align-items: center; justify-content: center; border-top: 1px solid rgba(11,20,26,.1); padding: 10px 14px; color: #027a5b; font-weight: 600; }
+.wa-map { display: grid; place-items: center; align-content: center; gap: 4px; width: 230px; max-width: 100%; height: 110px; margin-bottom: 6px; border-radius: 6px; color: #10211b; font-weight: 600; font-size: 13px; background: linear-gradient(35deg, transparent 46%, #fff 46% 53%, transparent 53%), linear-gradient(-50deg, transparent 60%, #f7e7a8 60% 66%, transparent 66%), #d5e8d4; }
+.wa-map span { background: rgba(255,255,255,.9); border-radius: 4px; padding: 1px 8px; }
+.wa-chip { width: fit-content; margin: 8px auto; padding: 4px 11px; border-radius: 7px; background: #fff; color: #54656f; font-size: 12px; text-align: center; box-shadow: 0 1px .5px rgba(11,20,26,.1); }
+.wa-dots { display: flex; gap: 4px; padding: 13px 14px; } .wa-dots i { width: 7px; height: 7px; border-radius: 50%; background: #8a979d; animation: wa-dot 1.2s infinite; } .wa-dots i:nth-child(2) { animation-delay: .15s; } .wa-dots i:nth-child(3) { animation-delay: .3s; }
+@keyframes wa-dot { 30% { transform: translateY(-4px); } 60% { transform: none; } }
+@keyframes wa-pop { from { opacity: 0; transform: translateY(5px); } }
+@media (prefers-reduced-motion: reduce) { .wa-msg, .wa-dots i { animation: none; } }
