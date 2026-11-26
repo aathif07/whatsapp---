@@ -1,5 +1,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+# better-sqlite3 is compiled here when no ready-made binary is available
+RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY index.html vite.config.js ./
