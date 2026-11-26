@@ -11,7 +11,7 @@ import { makeDays, day, ist } from '../server/days.js';
 import { openStore } from '../server/store.js';
 
 const PORT = 4700 + process.pid % 200, B = `http://127.0.0.1:${PORT}`, dir = mkdtempSync(join(tmpdir(), 'att-'));
-let proc, code, graph, gport, sent = [], admin = '', emp = '';
+let proc, graph, gport, sent = [], admin = '', emp = '';
 const req = async (path, method = 'GET', body, cookie = '', headers = {}) => {
   const r = await fetch(B + path, { method, headers: { cookie, ...(body && { 'Content-Type': 'application/json' }), ...headers }, body: body && JSON.stringify(body) });
   const text = await r.text(); let j = text; try { j = JSON.parse(text); } catch {}
@@ -19,9 +19,9 @@ const req = async (path, method = 'GET', body, cookie = '', headers = {}) => {
 };
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 async function boot() {
-  proc = spawn('node', ['server.js'], { env: { ...process.env, PORT, DATA_DIR: dir, NODE_ENV: 'production', WA_TOKEN: 't', WA_APP_SECRET: 's3', WA_VERIFY_TOKEN: 'vt', PUBLIC_URL: 'https://x.test', WA_GRAPH_URL: `http://127.0.0.1:${gport}` } });
+  proc = spawn('node', ['server.js'], { env: { ...process.env, PORT, DATA_DIR: dir, NODE_ENV: 'production', WA_TOKEN: 't', ADMIN_EMAIL: 'A@B.co', ADMIN_PASSWORD: 'long-password-1', WA_APP_SECRET: 's3', WA_VERIFY_TOKEN: 'vt', PUBLIC_URL: 'https://x.test', WA_GRAPH_URL: `http://127.0.0.1:${gport}` } });
   proc.stderr.on('data', (d) => process.stderr.write(d));
-  await new Promise((ok) => proc.stdout.on('data', (d) => { const m = /code: (\w+)/.exec(d); if (m) code = m[1]; if (/Dashboard ready/.test(d)) setTimeout(ok, 100); }));
+  await new Promise((ok) => proc.stdout.on('data', (d) => { if (/Dashboard ready/.test(d)) setTimeout(ok, 100); }));
 }
 before(async () => {
   graph = http.createServer((q, r) => { let b = ''; q.on('data', (d) => b += d); q.on('end', () => { sent.push({ url: q.url, auth: q.headers.authorization, b: b && JSON.parse(b) }); r.setHeader('Content-Type', 'application/json'); r.end(JSON.stringify(/messages$/.test(q.url) ? { messages: [{ id: 'wamid.' + sent.length }] } : { display_phone_number: '+91 90000 11111', verified_name: 'Co', code_verification_status: 'VERIFIED', success: true })); }); });
@@ -37,12 +37,12 @@ test('nothing is readable without signing in', async () => {
   for (const p of ['/data/app.db', '/server.js', '/server/auth.js']) assert.equal((await req(p)).s, 404, p);
   assert.equal((await req('/socket.io/?EIO=4&transport=polling')).s, 200); // transport only; namespace join is refused
 });
-test('setup needs the code, works once, cookie is protected', async () => {
-  const body = { name: 'Boss', email: 'a@b.co', password: 'long-password-1' };
-  assert.equal((await req('/api/auth/setup', 'POST', { ...body, code: 'nope' })).s, 401);
-  const r = await req('/api/auth/setup', 'POST', { ...body, code }); assert.equal(r.s, 200); admin = r.cookie;
+test('first admin comes from server settings; cookie is protected', async () => {
+  assert.equal((await req('/api/auth/setup', 'POST', { code: 'x' })).s, 401); // removed
+  assert.equal((await req('/api/auth/login', 'POST', { email: 'a@b.co', password: 'wrong-password' })).s, 401);
+  const r = await req('/api/auth/login', 'POST', { email: 'a@b.co', password: 'long-password-1' }); assert.equal(r.s, 200); admin = r.cookie;
   assert.match(r.raw, /HttpOnly/); assert.match(r.raw, /SameSite=Strict/); assert.match(r.raw, /Secure/);
-  assert.equal((await req('/api/auth/setup', 'POST', { ...body, code })).s, 403);
+  assert.equal((await req('/api/admins', 'GET', null, admin)).j.length, 1);
   assert.equal((await req('/api/state', 'GET', null, admin)).s, 200);
 });
 test('requests from another site are refused', async () => assert.equal((await req('/api/auth/logout', 'POST', {}, admin, { origin: 'https://evil.test' })).s, 403));

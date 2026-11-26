@@ -282,16 +282,10 @@ api.get('/health', (q, r) => r.json({ ok: true }));
 // ---------- sign in ----------
 const adminBy = (q) => { const x = auth.who(q, 'admin'); return x ? sql.prepare('SELECT id, email, name FROM admins WHERE id = ?').get(x) : undefined; };
 const noAdmins = () => !sql.prepare('SELECT 1 FROM admins LIMIT 1').get();
-let setupCode = noAdmins() ? randomBytes(6).toString('hex') : null;
 const email = (v) => { const e = str(v, 'Email', 120).toLowerCase(); if (!/^\S+@\S+\.\S+$/.test(e)) bad('Enter a valid email.'); return e; };
 const password = (v) => { const p = String(v ?? ''); if (p.length < 10 || p.length > 200) bad('Use a password of at least 10 characters.'); return p; };
 function createAdmin(b) { const a = { id: id(), email: email(b.email), name: str(b.name, 'Name', 60), hash: hash(password(b.password)) }; if (sql.prepare('SELECT 1 FROM admins WHERE email = ?').get(a.email)) bad('That email is already an administrator.'); sql.prepare('INSERT INTO admins VALUES (@id,@email,@name,@hash)').run(a); return a; }
 api.get('/auth', (q, r) => { const a = adminBy(q); r.json({ setup: noAdmins(), admin: a ?? null }); });
-api.post('/auth/setup', (q, r) => {
-  if (!setupCode || !noAdmins()) bad('Setup is already complete.', 403);
-  auth.attempt(q, 'setup', () => same(q.body?.code ?? '', setupCode));
-  const a = createAdmin(q.body); setupCode = null; audit(a.name, 'First administrator created'); auth.start(r, 'admin', a.id); changed(); r.json({});
-});
 api.post('/auth/login', (q, r) => {
   const e = String(q.body?.email ?? '').trim().toLowerCase().slice(0, 120), a = sql.prepare('SELECT * FROM admins WHERE email = ?').get(e);
   auth.attempt(q, 'admin:' + e, () => auth.verify(q.body?.password, a?.hash));
@@ -538,6 +532,11 @@ if (process.env.NODE_ENV === 'production') {
   const vite = await createVite({ root: here('.'), server: { middlewareMode: true, hmr: { server } }, appType: 'spa' });
   app.use(vite.middlewares);
 }
+// The first administrator comes from the server settings; it is used only while no administrator exists.
+if (noAdmins() && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+  try { const a = createAdmin({ name: process.env.ADMIN_NAME || 'Administrator', email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }); audit(a.name, 'First administrator created from server settings'); save(); }
+  catch (e) { console.error(`  Could not create the administrator: ${e.message}`); }
+}
 process.on('SIGINT', () => { save(); process.exit(0); });
 process.on('SIGTERM', () => { save(); process.exit(0); });
-server.listen(PORT, process.env.HOST || '127.0.0.1', () => { console.log(`\n  Dashboard ready: http://localhost:${PORT}`); if (setupCode) console.log(`  First-time setup code: ${setupCode}`); console.log(''); });
+server.listen(PORT, process.env.HOST || '127.0.0.1', () => { console.log(`\n  Dashboard ready: http://localhost:${PORT}`); if (noAdmins()) console.log('  No administrator yet: set ADMIN_EMAIL and ADMIN_PASSWORD, then restart.'); console.log(''); });

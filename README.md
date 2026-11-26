@@ -1,7 +1,7 @@
 # Multi-WhatsApp Attendance
 
     npm install
-    npm start      # http://localhost:4600  (first start prints a setup code)
+    npm start      # http://localhost:4600  (set ADMIN_EMAIL and ADMIN_PASSWORD first)
     npm test
 
 - `/` admin dashboard, `/me` employee IN/OUT, `/user` test chats for simulated accounts (admin only)
