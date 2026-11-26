@@ -3,3 +3,4 @@ dist
 data
 ._*
 .DS_Store
+.env

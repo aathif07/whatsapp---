@@ -1,17 +1,27 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, XCircle, Clock, Ban, X, Check, CheckCheck, AlertCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Ban, AlertTriangle, LogIn, Minus, X, Check, CheckCheck, AlertCircle } from 'lucide-react';
 export const Ctx = createContext(null);
 export const useApp = () => useContext(Ctx);
 export async function api(path, method = 'GET', body, headers = {}) {
   const r = await fetch('/api' + path, { method, headers: { ...headers, ...(body && { 'Content-Type': 'application/json' }) }, body: body && JSON.stringify(body) });
   const j = await r.json().catch(() => ({}));
+  if (r.status === 401 && !path.startsWith('/me') && !path.startsWith('/auth')) dispatchEvent(new Event('signed-out'));
   if (!r.ok) throw Object.assign(new Error(j.error || 'Request failed'), { status: r.status });
   return j;
 }
-export const time = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '—';
-export const dateTime = (t) => t ? new Date(t).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+export const time = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit' }) : '—';
+export const dateTime = (t) => t ? new Date(t).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 export const when = (t) => !t ? '' : new Date(t).toDateString() === new Date().toDateString() ? time(t) : new Date(t).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-const ST = { present: [CheckCircle2, 'text-good', 'Present'], absent: [XCircle, 'text-bad', 'Absent'], pending: [Clock, 'text-[#b27700]', 'Pending'], cancelled: [Ban, 'text-soft', 'Cancelled'], active: [Clock, 'text-brand', 'Active'], completed: [CheckCircle2, 'text-good', 'Completed'], connected: [CheckCircle2, 'text-good', 'Connected'], disconnected: [XCircle, 'text-bad', 'Disconnected'] };
+export const dur = (m) => `${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m`;
+export const today = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+export const dayLabel = (d) => new Date(d + 'T00:00:00+05:30').toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'short', day: 'numeric', month: 'short' });
+export const SOURCE = { web: 'Web', whatsapp: 'WhatsApp', admin: 'Admin' };
+export const getPlace = () => new Promise((ok, no) => {
+  if (!navigator.geolocation) return no(new Error('This browser cannot share a location.'));
+  navigator.geolocation.getCurrentPosition((p) => ok({ lat: p.coords.latitude, lng: p.coords.longitude, accuracy: p.coords.accuracy }),
+    (e) => no(new Error(e.code === 1 ? 'Allow location access in your browser, then try again.' : 'Could not find your location. Try again.')), { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+});
+const ST = { working: [LogIn, 'text-brand', 'Working'], missing: [AlertTriangle, 'text-[#b27700]', 'Missing OUT'], notin: [Clock, 'text-soft', 'Not in yet'], off: [Minus, 'text-soft', 'Day off'], present: [CheckCircle2, 'text-good', 'Present'], absent: [XCircle, 'text-bad', 'Absent'], pending: [Clock, 'text-[#b27700]', 'Pending'], cancelled: [Ban, 'text-soft', 'Cancelled'], active: [Clock, 'text-brand', 'Active'], completed: [CheckCircle2, 'text-good', 'Completed'], connected: [CheckCircle2, 'text-good', 'Connected'], disconnected: [XCircle, 'text-bad', 'Disconnected'] };
 export function Status({ s }) { const [I, c, l] = ST[s]; return <span className="inline-flex items-center gap-1.5 font-medium"><I size={15} className={c} aria-hidden />{l}</span>; }
 export function Ticks({ s }) { const I = s === 'failed' ? AlertCircle : s === 'sending' || s === 'queued' ? Clock : s === 'sent' ? Check : CheckCheck; return <I size={14} aria-label={s} className={s === 'failed' ? 'text-bad' : s === 'read' ? 'text-[#1677b8]' : 'text-soft'} />; }
 export const fmtPhone = (p) => p?.replace(/^\+91(\d{5})(\d{5})$/, '+91 $1 $2');

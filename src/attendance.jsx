@@ -21,7 +21,7 @@ export function Attendance() {
 }
 function Live({ s }) {
   const { d } = useApp(), rows = d.records.filter((r) => r.sessionId === s.id), x = s.summary;
-  return <Page title={s.title} actions={<><a className="btn" href="/user" target="_blank" rel="noreferrer">Open user chats</a><Confirm label="Cancel session" text="Stop without recording anyone as absent?" onYes={() => api(`/sessions/${s.id}/cancel`, 'POST')}>Cancel session</Confirm><Confirm label="Finish now" text={`${x.pending} users who have not checked in will be marked Absent.`} onYes={() => api(`/sessions/${s.id}/finish`, 'POST')}>Finish now</Confirm></>}>
+  return <Page title={s.title} actions={<><a className="btn" href="/user" target="_blank" rel="noreferrer">Open test chats</a><Confirm label="Cancel session" text="Stop without recording anyone as absent?" onYes={() => api(`/sessions/${s.id}/cancel`, 'POST')}>Cancel session</Confirm><Confirm label="Finish now" text={`${x.pending} users who have not checked in will be marked Absent.`} onYes={() => api(`/sessions/${s.id}/finish`, 'POST')}>Finish now</Confirm></>}>
     <section className="card p-6"><div className="flex flex-wrap gap-6 items-end justify-between mb-4"><div><p className="text-soft">Time remaining</p><Countdown end={s.endsAt} skew={d.skew} /></div><div className="flex flex-wrap gap-6">{[['Sent', x.sent], ['Delivered', x.delivered], ['Present', x.present], ['Pending', x.pending], ['Attendance', x.percent + '%']].map(([l, v]) => <div key={l}><p className="text-soft">{l}</p><p className="text-2xl font-semibold tabular-nums">{v}</p></div>)}</div></div><Split s={x} /><p className="text-soft mt-2">Started {time(s.startedAt)}, ends {time(s.endsAt)}. {s.requireLocation ? 'Users must reply and share their location to be Present.' : 'Users who do not reply are marked Absent.'}</p></section>
     <Records rows={rows} live />
   </Page>;
@@ -30,7 +30,7 @@ function Start({ d, run }) {
   const on = d.accounts.filter((a) => a.connected), [sel, setSel] = useState(on.map((a) => a.id)), [msg, setMsg] = useState(d.settings.message), [min, setMin] = useState(d.settings.minutes), [busy, setBusy] = useState(false), [loc, setLoc] = useState(d.settings.requireLocation);
   const ids = sel.filter((i) => on.some((a) => a.id === i)), users = d.users.filter((u) => u.active && ids.includes(u.accountId)), last = d.sessions[0], all = ids.length === on.length;
   const ex = users[0], preview = msg.replace(/\{\{\s*name\s*\}\}/g, ex?.name ?? 'Aathif').replace(/\{\{\s*date\s*\}\}/g, new Date().toLocaleDateString('en-CA')).replace(/\{\{\s*account\s*\}\}/g, d.accounts.find((a) => a.id === ex?.accountId)?.name ?? '');
-  return <Page title="Attendance" sub="Send a reminder and collect check-ins">
+  return <Page title="Reminders" sub="Send a reminder and collect check-ins">
     {last?.status === 'completed' && <div className="card p-4 px-5 mb-4 flex flex-wrap gap-3 justify-between items-center"><span>Last session, {dateTime(last.startedAt)}: <b>{last.summary.present} present</b>, <b>{last.summary.absent} absent</b> ({last.summary.percent}%)</span><Link className="btn" to={`/reports/${last.id}`}>View report</Link></div>}
     <div className="grid lg:grid-cols-[1fr_400px] gap-4 items-start"><section className="card p-6">
       <Label t="Attendance message"><textarea rows={4} className="field" value={msg} onChange={(e) => setMsg(e.target.value)} /></Label>

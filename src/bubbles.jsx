@@ -10,19 +10,19 @@ export function Avatar({ name, size = 44 }) {
 const dayName = (t) => { const d = new Date(t), y = new Date(); if (d.toDateString() === y.toDateString()) return 'Today'; y.setDate(y.getDate() - 1); return d.toDateString() === y.toDateString() ? 'Yesterday' : d.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }); };
 
 /** WhatsApp-style message list. `mine` is the direction shown on the right in green. */
-export function Thread({ msgs, mine, typing, botTyping, onCheckin }) {
+export function Thread({ msgs, mine, typing, botTyping, onCheckin, extra, note = 'Attendance chat. Visible to administrators.' }) {
   const box = useRef();
-  useEffect(() => { box.current.scrollTop = box.current.scrollHeight; }, [msgs.length, typing, botTyping]);
+  useEffect(() => { box.current.scrollTop = box.current.scrollHeight; }, [msgs.at(-1)?.id, typing, botTyping]);
   return <div ref={box} className="wa-wall grow min-h-0 overflow-y-auto px-3 md:px-[6%] py-3" aria-live="polite">
-    <p className="wa-chip bg-[#ffeecd]! max-w-md"><Lock size={11} className="inline mr-1" />Demo chat. Messages stay on this computer.</p>
+    <p className="wa-chip bg-[#ffeecd]! max-w-md"><Lock size={11} className="inline mr-1" />{note}</p>
     {msgs.map((m, i) => {
       const prev = msgs[i - 1], newDay = !prev || dayName(prev.at) !== dayName(m.at), out = m.dir === mine, tail = newDay || prev.dir !== m.dir;
       return <Fragment key={m.id}>{newDay && <p className="wa-chip">{dayName(m.at)}</p>}
         <div className={`wa-msg ${out ? 'wa-out' : 'wa-in'} ${tail ? 'wa-tail mt-2.5' : 'mt-0.5'}`}>
           <div className="px-2.5 pt-1.5 pb-1.5">
             {m.kind === 'location' && <a target="_blank" rel="noreferrer" href={`https://www.google.com/maps?q=${m.lat},${m.lng}`} className="wa-map"><MapPin size={34} fill="#ea4335" color="#fff" /><span>View on map</span></a>}
-            <span className="whitespace-pre-wrap break-words">{m.kind === 'location' ? 'Current location' : m.text}</span>
-            <span className="wa-meta">{time(m.at)}{out && <Ticks s={m.dir === 'in' ? (m.read ? 'read' : 'delivered') : m.status} />}</span>
+            {extra?.(m)}<span className={`whitespace-pre-wrap break-words ${m.kind === 'deleted' ? 'italic text-soft' : ''}`}>{m.kind === 'location' ? 'Current location' : m.text}</span>
+            {m.error && <span className="block text-bad text-[13px]">{m.error}</span>}<span className="wa-meta">{m.edited && 'Edited '}{time(m.at)}{out && <Ticks s={m.dir === 'in' ? (m.read ? 'read' : 'delivered') : m.status} />}</span>
           </div>
           {m.kind === 'checkin' && (onCheckin ? <button className="wa-cta w-full" onClick={() => onCheckin(m.token)}><SquareArrowOutUpRight size={17} />Mark Attendance</button> : <span className="wa-cta"><SquareArrowOutUpRight size={17} />Mark Attendance</span>)}
         </div></Fragment>;
